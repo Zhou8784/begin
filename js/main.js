@@ -47,6 +47,8 @@ window.onload = () => {
     }, 800);
     
     requestNotificationPermission();
+    // 启动实时提醒轮询
+    startReminderInterval();
 };
 
 window.setPickedPoint = (room) => {
@@ -159,18 +161,22 @@ function bindEvents() {
     const pickEnd = safeGet('pick-end-btn');
     const navStart = safeGet('start-navigation-btn');
     
+// 修改：点击“当前定位”直接模拟定位，不进入选点模式4.18
     pickStart.onclick = () => {
-        window.pickingMode = 'start';
-        pickStart.classList.add('active');
-        pickEnd.classList.remove('active');
-        map.getContainer().style.cursor = 'crosshair';
+        const mockLoc = setMockLocation();
+        if (mockLoc) {
+            startPoint = mockLoc;
+            document.getElementById('start-point-label').textContent = mockLoc.name;
+            document.getElementById('start-navigation-btn').disabled = !(startPoint && endPoint);
+        }
     };
+    
     pickEnd.onclick = () => {
         window.pickingMode = 'end';
         pickEnd.classList.add('active');
-        pickStart.classList.remove('active');
         map.getContainer().style.cursor = 'crosshair';
     };
+    
     navStart.onclick = () => {
         if (!startPoint || !endPoint) return;
         const path = findPath(startPoint.roomId, endPoint.roomId);
@@ -201,6 +207,8 @@ function bindEvents() {
         pickEnd.classList.remove('active');
         map.getContainer().style.cursor = '';
         window.pickingMode = null;
+        // 清除模拟定位标记4.18 21：08
+        clearMockLocation();
     };
     
     // 关闭房间列表弹窗
@@ -255,13 +263,14 @@ function showRoomListModal(type) {
             const roomId = el.dataset.roomid;
             const room = allRooms.find(r => r.room_id === roomId);
             if (room) {
-                const defaultStart = allRooms.find(r => r.room_id === '1-stair1') || allRooms[0];
-                startPoint = { roomId: defaultStart.room_id, name: defaultStart.name, center: defaultStart.center };
+                  // 如果没有设置起点，自动设为模拟定位4.18 21：13 266-287
+                if (!startPoint) {
+                    startPoint = setMockLocation();
+                    document.getElementById('start-point-label').textContent = startPoint.name;
+                }
                 endPoint = { roomId: room.room_id, name: room.name, center: room.center };
-                document.getElementById('start-point-label').textContent = startPoint.name;
                 document.getElementById('end-point-label').textContent = endPoint.name;
                 document.getElementById('start-navigation-btn').disabled = false;
-                
                 const path = findPath(startPoint.roomId, endPoint.roomId);
                 if (path && path.length > 0) {
                     drawRoute(path);
@@ -274,9 +283,70 @@ function showRoomListModal(type) {
             }
         };
     });
-    
     document.getElementById('room-list-modal').style.display = 'flex';
 }
+
+function showVacantRoomModal() {
+    // 虚拟课表数据，模拟全校教学班占用情况
+    const allClassrooms = allRooms.filter(r => r.type.includes('多媒体教室') || r.type.includes('教室'));
+    const timeSlots = ['8:00-9:40', '10:00-11:40', '14:00-15:40', '16:00-17:40', '19:00-20:40'];
+    const occupied = {
+        '1-101': ['8:00-9:40', '14:00-15:40'],
+        '1-102': ['10:00-11:40'],
+        '2-101': ['14:00-15:40', '19:00-20:40'],
+        '3-203': ['8:00-9:40', '10:00-11:40'],
+    };
+    const capacities = { '1-101': 60, '1-102': 60, '1-103': 60, '2-101': 80, '2-102': 80, '2-103': 80, '3-101': 120, '3-102': 120, '3-203': 100 };
+    
+    let html = '';
+    timeSlots.forEach(slot => {
+        const vacant = allClassrooms.filter(room => {
+            const occ = occupied[room.room_id] || [];
+            return !occ.includes(slot);
+        });
+        html += `<div style="margin-bottom:16px;"><strong>${slot}</strong> 空闲教室 (${vacant.length}间)</div>`;
+        if (vacant.length === 0) {
+            html += `<div style="color:#888; margin-left:16px;">暂无空闲</div>`;
+        } else {
+            vacant.forEach(room => {
+                const cap = capacities[room.room_id] || 60;
+                html += `<div class="vacant-room-item" style="padding:8px 12px; margin:4px 0; background:#f8faff; border-radius:8px; display:flex; justify-content:space-between; cursor:pointer;" data-roomid="${room.room_id}">
+                            <span>${room.name}</span>
+                            <span>👥 ${cap}人</span>
+                        </div>`;
+            });
+        }
+    });
+    document.getElementById('vacant-room-container').innerHTML = html;
+    document.querySelectorAll('.vacant-room-item').forEach(el => {
+        el.onclick = () => {
+            const roomId = el.dataset.roomid;
+            const room = allRooms.find(r => r.room_id === roomId);
+            if (room) {
+                if (!startPoint) {
+                    startPoint = setMockLocation();
+                    document.getElementById('start-point-label').textContent = startPoint.name;
+                }
+                endPoint = { roomId: room.room_id, name: room.name, center: room.center };
+                document.getElementById('end-point-label').textContent = endPoint.name;
+                document.getElementById('start-navigation-btn').disabled = false;
+                const path = findPath(startPoint.roomId, endPoint.roomId);
+                if (path && path.length > 0) {
+                    drawRoute(path);
+                    filterFloor(room.floor_number);
+                    map.setView([room.center[1], room.center[0]], 1.2);
+                    document.getElementById('route-panel').style.display = 'block';
+                    document.getElementById('route-info').innerHTML = `前往 ${room.name}`;
+                }
+                document.getElementById('vacant-room-modal').style.display = 'none';
+            }
+        };
+    });
+    document.getElementById('vacant-room-modal').style.display = 'flex';
+}
+
+
+
 
 function renderScheduleList() {
     const container = document.getElementById('today-schedule');

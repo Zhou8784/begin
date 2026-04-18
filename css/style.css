@@ -330,3 +330,16 @@ body { overflow: hidden; background: #f0f4f8; }
     border-radius: 20px;
     font-size: 0.8rem;
 }
+/* 伪3D倾斜凸起效果 */
+#map.map-3d {
+    transform: perspective(1200px) rotateX(45deg) scale(1.1);
+    transform-origin: center center;
+    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+#map.map-3d .leaflet-pane .leaflet-overlay-pane path {
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+}
+#map.map-3d .room-label {
+    transform: translateZ(5px);
+}

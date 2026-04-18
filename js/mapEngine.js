@@ -183,7 +183,34 @@ function clearRoute() {
     }
 }
 // 在 mapEngine.js 底部添加
+// 模拟定位功能4.18 21：20 187-213
+function setMockLocation() {
+    // 模拟定位在一楼大厅（1栋1楼走廊大厅1）
+    const hall = allRooms.find(r => r.room_id === '1-1f-hall1');
+    if (hall) {
+        mockLocationPoint = { roomId: hall.room_id, name: '我的位置 (模拟)', center: hall.center };
+        if (mockLocationMarker) map.removeLayer(mockLocationMarker);
+        mockLocationMarker = L.circleMarker([hall.center[1], hall.center[0]], {
+            radius: 8,
+            color: '#0066ff',
+            fillColor: '#3399ff',
+            fillOpacity: 0.8,
+            weight: 2
+        }).addTo(map).bindPopup('📍 我的位置').openPopup();
+        map.setView([hall.center[1], hall.center[0]], 1.2);
+        filterFloor(1);
+        return mockLocationPoint;
+    }
+    return null;
+}
 
+function clearMockLocation() {
+    if (mockLocationMarker) {
+        map.removeLayer(mockLocationMarker);
+        mockLocationMarker = null;
+    }
+    mockLocationPoint = null;
+}
 let is3D = false; // 初始为 2D 状态
 
 function toggle3D() {
