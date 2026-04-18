@@ -1,6 +1,5 @@
 let reminderMinutes = APP_CONFIG.defaultReminder;
 let timers = [];
-let reminderInterval = null;
 
 function requestNotificationPermission() {
     if ('Notification' in window) {
@@ -8,38 +7,29 @@ function requestNotificationPermission() {
     }
 }
 
-function refreshReminders() {
-    const schedule = loadSchedule();
-    scheduleReminders(schedule);
-}
-
+// 建议替换 notification.js 中的 scheduleReminders 函数
 function scheduleReminders(schedule) {
     timers.forEach(clearTimeout);
     timers = [];
     
-    const now = new Date();
     schedule.forEach(course => {
         if (!course.time) return;
-        // 解析时间，格式如 "周一 14:30-15:55"
-        const parts = course.time.match(/周([一二三四五六日])\s*(\d{1,2}):(\d{2})/);
-        if (!parts) return;
-        const weekdayMap = { '一':1, '二':2, '三':3, '四':4, '五':5, '六':6, '日':0 };
-        const targetWeekday = weekdayMap[parts[1]];
-        const targetHour = parseInt(parts[2]);
-        const targetMinute = parseInt(parts[3]);
-        
-        // 计算下一次该课程时间
-        let targetDate = new Date(now);
-        targetDate.setHours(targetHour, targetMinute, 0, 0);
-        const currentWeekday = now.getDay();
-        let daysDiff = targetWeekday - currentWeekday;
-        if (daysDiff < 0) daysDiff += 7;
-        if (daysDiff === 0 && targetDate <= now) daysDiff = 7;
-        targetDate.setDate(now.getDate() + daysDiff);
-        
-        const timeDiff = targetDate - now - reminderMinutes * 60000;
+
+        // 1. 提取时间（例如从 "周一 14:30-15:55" 提取 "14:30"）
+        const timeMatch = course.time.match(/(\d{1,2}):(\d{2})/);
+        if (!timeMatch) return;
+
+        const now = new Date();
+        const targetTime = new Date(now);
+        targetTime.setHours(parseInt(timeMatch[1]), parseInt(timeMatch[2]), 0);
+
+        // 2. 计算差值（毫秒）
+        const timeDiff = targetTime - now - reminderMinutes * 60000;
+
+        // 3. 只有当课程还没开始时才设置提醒
         if (timeDiff > 0) {
             const timer = setTimeout(() => {
+                // 使用更专业的 SweetAlert2 弹窗（你们 index.html 已经引入了）
                 Swal.fire({
                     title: '上课提醒',
                     text: `${course.name} 即将在 ${course.room} 开始，请前往导航`,
@@ -48,7 +38,7 @@ function scheduleReminders(schedule) {
                     confirmButtonColor: '#003f87'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.navigateToRoom(course.roomId);
+                        window.navigateToRoom(course.roomId || course.room);
                     }
                 });
             }, timeDiff);
@@ -56,15 +46,8 @@ function scheduleReminders(schedule) {
         }
     });
 }
-
 function setReminderMinutes(minutes) {
     reminderMinutes = minutes;
-}
-
-// 每分钟检查一次，动态更新提醒
-function startReminderInterval() {
-    if (reminderInterval) clearInterval(reminderInterval);
-    reminderInterval = setInterval(() => {
-        refreshReminders();
-    }, 60000);
+    const schedule = loadSchedule();
+    scheduleReminders(schedule);
 }
