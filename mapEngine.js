@@ -1,3 +1,4 @@
+
 let map;
 let currentFloor = 1;
 let allRooms = [];
