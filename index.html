@@ -67,15 +67,11 @@
             </div>
 
             <div class="point-picker">
-    <!-- 模拟定位 + 地图选起点 双按钮行 4.19 21：48改70-85-->
-    <div class="picker-row" style="gap: 6px;">
-        <button id="mock-location-btn" class="picker-btn" style="flex:1; background: #e0f2fe; color: #0369a1;">📍 模拟定位</button>
-        <button id="pick-start-btn" class="picker-btn" style="flex:1;">🗺️ 选起点</button>
-    </div>
+    <div class="point-picker">
     <div class="picker-row">
-        <span id="start-point-label" class="point-label" style="margin-left: 8px;">未选择</span>
+        <button id="pick-start-btn" class="picker-btn start-btn">📍当前定位</button>
+        <span id="start-point-label" class="point-label">未选择</span>
     </div>
-    <!-- 终点选择行 -->
     <div class="picker-row">
         <button id="pick-end-btn" class="picker-btn end-btn">🏁 选择终点</button>
         <span id="end-point-label" class="point-label">未选择</span>

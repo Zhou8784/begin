@@ -159,19 +159,6 @@ function bindEvents() {
     const pickEnd = safeGet('pick-end-btn');
     const navStart = safeGet('start-navigation-btn');
     
-    // 模拟定位按钮（一键设起点）4.19 21;59改163-180
-const mockLocBtn = safeGet('mock-location-btn');
-mockLocBtn.onclick = () => {
-    const mockLoc = setMockLocation();
-    if (mockLoc) {
-        startPoint = mockLoc;
-        safeGet('start-point-label').textContent = mockLoc.name;
-        safeGet('start-navigation-btn').disabled = !(startPoint && endPoint);
-    }
-};
-
-// 地图选起点按钮（进入选点模式）
-const pickStart = safeGet('pick-start-btn');
 pickStart.onclick = () => {
     window.pickingMode = 'start';
     pickStart.classList.add('active');
