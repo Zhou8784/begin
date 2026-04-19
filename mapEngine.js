@@ -22,6 +22,39 @@ function initMap() {
     redrawRoomsByFloor(currentFloor);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+    // 在 mapEngine.js 的 initMap 函数最后添加 4.19 22：56改25-57
+map.on('click', function(e) {
+    if (!window.pickingMode) return;
+
+    const coords = [e.latlng.lng, e.latlng.lat]; // 转换坐标
+
+    if (window.pickingMode === 'start') {
+        window.startPoint = coords;
+        // 在地图上放置或移动起点标记
+        if (window.startMarker) map.removeLayer(window.startMarker);
+        window.startMarker = L.marker(e.latlng, { 
+            icon: L.divIcon({ className: 'start-marker', html: '📍', iconSize: [25, 25] }) 
+        }).addTo(map);
+        
+        document.getElementById('start-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
+        document.getElementById('btn-pick-start').classList.remove('active');
+    } 
+    else if (window.pickingMode === 'end') {
+        window.endPoint = coords;
+        if (window.endMarker) map.removeLayer(window.endMarker);
+        window.endMarker = L.marker(e.latlng, { 
+            icon: L.divIcon({ className: 'end-marker', html: '🚩', iconSize: [25, 25] }) 
+        }).addTo(map);
+        
+        document.getElementById('end-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
+        document.getElementById('btn-pick-end').classList.remove('active');
+    }
+
+    window.pickingMode = null; // 选完重置
+    // 检查是否可以开始导航
+    const navBtn = document.getElementById('nav-start-btn');
+    if (navBtn) navBtn.disabled = !(window.startPoint && window.endPoint);
+});
 }
 
 function extractAllRooms() {
