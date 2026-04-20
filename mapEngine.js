@@ -36,8 +36,10 @@ map.on('click', function(e) {
             icon: L.divIcon({ className: 'start-marker', html: '📍', iconSize: [25, 25] }) 
         }).addTo(map);
         
-        document.getElementById('start-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
-        document.getElementById('btn-pick-start').classList.remove('active');
+       // document.getElementById('start-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;4.20 15；49注释39、40
+       // document.getElementById('btn-pick-start').classList.remove('active');
+        document.getElementById('start-point-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
+        document.getElementById('pick-start-btn').classList.remove('active');
     } 
     else if (window.pickingMode === 'end') {
         window.endPoint = coords;
@@ -46,13 +48,16 @@ map.on('click', function(e) {
             icon: L.divIcon({ className: 'end-marker', html: '🚩', iconSize: [25, 25] }) 
         }).addTo(map);
         
-        document.getElementById('end-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
-        document.getElementById('btn-pick-end').classList.remove('active');
+        //document.getElementById('end-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;4.20 15；49注释51、52
+        //document.getElementById('btn-pick-end').classList.remove('active');
+        document.getElementById('end-point-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
+        document.getElementById('pick-end-btn').classList.remove('active');
     }
 
     window.pickingMode = null; // 选完重置
     // 检查是否可以开始导航
-    const navBtn = document.getElementById('nav-start-btn');
+    //const navBtn = document.getElementById('nav-start-btn');
+    const navBtn = document.getElementById('start-navigation-btn');
     if (navBtn) navBtn.disabled = !(window.startPoint && window.endPoint);
 });
 }
@@ -237,9 +242,9 @@ function toggle3D() {
         
         // 关键：为了在3D视角下标记和房间多边形依然清晰，可以尝试对内部元素做反向补偿（视情况而定）
         // 这里提供一个简单的思路，如果效果好就保留，不好就删掉
-        document.querySelectorAll('.leaflet-marker-icon, .leaflet-popup').forEach(el => {
-            el.style.transform += ' rotateX(-30deg)'; // 反向补偿，让图标不跟着完全倒下
-        });
+       // document.querySelectorAll('.leaflet-marker-icon, .leaflet-popup').forEach(el => {
+        //    el.style.transform += ' rotateX(-30deg)'; // 反向补偿，让图标不跟着完全倒下
+        //});
         
     } else {
         // 恢复 2D 模式
@@ -250,9 +255,9 @@ function toggle3D() {
         btn3d.classList.add('text-primary', 'bg-white');
         
         // 恢复所有元素的补偿
-         document.querySelectorAll('.leaflet-marker-icon, .leaflet-popup').forEach(el => {
-            el.style.transform = el.style.transform.replace(' rotateX(-30deg)', '');
-        });
+         //document.querySelectorAll('.leaflet-marker-icon, .leaflet-popup').forEach(el => {
+         //   el.style.transform = el.style.transform.replace(' rotateX(-30deg)', '');
+       // });
     }
     
     // 关键点：切换视角后需要通知 Leaflet 重新计算视野，防止报错

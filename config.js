@@ -6,7 +6,7 @@ window.APP_CONFIG = {
         bearing: 0
     },
     defaultReminder: 15,
-    style: 'https://demotiles.maplibre.org/style.json',
+    //4.20 15：48 注释 修复 404 资源问题  style: 'https://demotiles.maplibre.org/style.json',
     poiColors: {
         '多媒体教室': '#3b82f6',
         '办公室': '#f59e0b',
