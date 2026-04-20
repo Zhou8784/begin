@@ -23,11 +23,28 @@ function initMap() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     // 在 mapEngine.js 的 initMap 函数最后添加 4.19 22：56改25-57
-map.on('click', function(e) {
+    map.on('click', function(e) {
     if (!window.pickingMode) return;
+    // 阻止事件冒泡，避免与多边形点击冲突
+    L.DomEvent.stopPropagation(e);
 
-    const coords = [e.latlng.lng, e.latlng.lat]; // 转换坐标
+    //const coords = [e.latlng.lng, e.latlng.lat]; // 转换坐标
+    // 获取点击坐标
+        const latlng = e.latlng;
+        const coords = [latlng.lng, latlng.lat];
+         const fakeRoom = {
+            roomId: `coord_${Date.now()}`,   // 临时ID
+            name: `坐标点 (${Math.round(coords[0])}, ${Math.round(coords[1])})`,
+            center: coords,
+            type: '坐标点'
+        };
 
+        // 调用统一的选点处理函数
+        if (typeof window.setPickedPoint === 'function') {
+            window.setPickedPoint(fakeRoom);
+        }
+
+    /*4.20 16：24
     if (window.pickingMode === 'start') {
         window.startPoint = coords;
         // 在地图上放置或移动起点标记
@@ -40,7 +57,8 @@ map.on('click', function(e) {
        // document.getElementById('btn-pick-start').classList.remove('active');
         document.getElementById('start-point-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
         document.getElementById('pick-start-btn').classList.remove('active');
-    } 
+    } */
+    /*4.20 16：24
     else if (window.pickingMode === 'end') {
         window.endPoint = coords;
         if (window.endMarker) map.removeLayer(window.endMarker);
@@ -52,13 +70,16 @@ map.on('click', function(e) {
         //document.getElementById('btn-pick-end').classList.remove('active');
         document.getElementById('end-point-label').innerText = `已选地点: ${Math.round(coords[0])}, ${Math.round(coords[1])}`;
         document.getElementById('pick-end-btn').classList.remove('active');
-    }
+    }*/
 
     window.pickingMode = null; // 选完重置
     // 检查是否可以开始导航
     //const navBtn = document.getElementById('nav-start-btn');
     const navBtn = document.getElementById('start-navigation-btn');
     if (navBtn) navBtn.disabled = !(window.startPoint && window.endPoint);
+    document.getElementById('pick-start-btn')?.classList.remove('active');
+        document.getElementById('pick-end-btn')?.classList.remove('active');
+        map.getContainer().style.cursor = '';
 });
 }
 
@@ -108,9 +129,15 @@ function redrawRoomsByFloor(floor) {
                     window.setPickedPoint({
                         roomId: room.room_id,
                         name: room.name,
-                        center: room.center
+                        center: room.center,
+                        type: room.type //4.20增加
                     });
                 }
+                 // 清除激活状态（setPickedPoint 中已处理部分，这里补全）4.20 16；29 增加137-140
+                window.pickingMode = null;
+                document.getElementById('pick-start-btn')?.classList.remove('active');
+                document.getElementById('pick-end-btn')?.classList.remove('active');
+                map.getContainer().style.cursor = '';
             } else {
                 polygon.bindPopup(`<strong>${room.name}</strong><br>${room.type}`).openPopup();
             }
@@ -162,9 +189,15 @@ function filterPoiByTypes(activeTypes) {
                     window.setPickedPoint({
                         roomId: room.room_id,
                         name: room.name,
-                        center: room.center
+                        center: room.center,
+                        type: room.type//4.20 add
                     });
                 }
+                //4.20 add197-200
+                 window.pickingMode = null;
+                document.getElementById('pick-start-btn')?.classList.remove('active');
+                document.getElementById('pick-end-btn')?.classList.remove('active');
+                map.getContainer().style.cursor = '';
             } else {
                 polygon.bindPopup(`<strong>${room.name}</strong><br>${room.type}`).openPopup();
             }
